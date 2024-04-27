@@ -1,5 +1,7 @@
 #include <Arduino.h>
+
 #include "modrob.h"
+#include "multi_uart.h"
 
 //Wifi UDP
 #include "WiFi.h"
@@ -14,7 +16,10 @@ uint8_t udp_buffer_rx[255];
 uint8_t udp_buffer_tx[255];
 
 // --- Module parameters ---
-Module module;
+#define TX_PIN    33
+#define RX_PIN_1  32
+#define RX_PIN_2  17
+ModRob module;
 
 void setup() {
     //Debug
@@ -32,6 +37,9 @@ void setup() {
     udp.begin(wifi_port);
 
     //module setup
+    module.setup(WiFi.localIP()[3], 0);
+    module.set_port_tx(TX_PIN);
+    module.add_port_rx(RX_PIN_1, NULL);
 }
 
 void loop() {

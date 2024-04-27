@@ -2,6 +2,7 @@
 #define MODROB_H
 
 #include <Arduino.h>
+#include "multi_uart.h"
 
 /*
 #define PORT_NB             1
@@ -12,7 +13,7 @@ uint8_t port_locations[PORT_NB*PORT_LOC_BYTES_NB];
 uint8_t module_add[MODULE_ADD_NB];
 */
 
-class Module {
+class ModRob {
     private:
         //Module properties
         uint8_t module_id;
@@ -26,6 +27,9 @@ class Module {
 
         uint8_t *port_locations;
         uint8_t port_locations_size;
+
+        //MulitUART driver
+        MultiUART multi_uart;
 
 
         //Device properties
@@ -43,7 +47,9 @@ class Module {
     public:
     //internal properties
         bool setup(uint8_t module_idk, uint8_t port_location_bytes_nb);
-        bool add_port(uint8_t rx_pin, uint8_t *port_location);
+        bool add_port_rx(uint8_t rx_pin, uint8_t *port_location);
+        bool set_port_tx(uint8_t tx_pin);
+
         //bool add_device(Device device);
         bool set_module_add(uint8_t *additional_bytes, uint16_t additional_bytes_nb);
 
