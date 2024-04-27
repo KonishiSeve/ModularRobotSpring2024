@@ -17,16 +17,16 @@ class ModRob {
     private:
         //Module properties
         uint8_t module_id;
-        uint8_t *module_add;
-        uint8_t module_add_size;
+        uint8_t *module_attributes;
+        uint8_t module_attributes_size;
 
         //Port properties
         uint8_t *neighbours_id;
-        uint8_t *port_rx_pins;
         uint8_t neighbours_id_size;
 
-        uint8_t *port_locations;
-        uint8_t port_locations_size;
+        uint8_t *ports_attributes;
+        uint8_t ports_attributes_size;
+        uint8_t bytes_per_port_attribute;
 
         //MulitUART driver
         MultiUART multi_uart;
@@ -46,12 +46,12 @@ class ModRob {
 
     public:
     //internal properties
-        bool setup(uint8_t module_idk, uint8_t port_location_bytes_nb);
-        bool add_port_rx(uint8_t rx_pin, uint8_t *port_location);
+        bool setup(uint8_t module_id, uint8_t bytes_per_port_attribute);
+        bool add_port_rx(uint8_t rx_pin, uint8_t *port_attributes);
         bool set_port_tx(uint8_t tx_pin);
 
         //bool add_device(Device device);
-        bool set_module_add(uint8_t *additional_bytes, uint16_t additional_bytes_nb);
+        bool set_module_attributes(uint8_t *module_attributes, uint16_t module_attributes_size);
 
     //online
         uint16_t process_udp(uint8_t *packet, uint8_t packet_size, uint8_t *udp_tx_buffer);

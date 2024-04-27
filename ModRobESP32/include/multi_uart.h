@@ -45,10 +45,11 @@ class MultiUART {
         bool add_receiver(uint8_t pin);
 
         //communication functions
-
         uint8_t xfer(uint32_t baud, uint32_t timeout_ms,
                      uint16_t tx_byte, uint32_t tx_delay_us); //Rx and Tx over UART
             //This function will first start all receivers and send the tx_byte after tx_delay_us microseconds
+
+        uint8_t get_value(uint8_t index);
 
 };
 

@@ -1,17 +1,17 @@
 #include "modrob.h"
 #include "multi_uart.h"
 
-bool ModRob::setup(uint8_t module_id, uint8_t port_location_bytes_nb) {
+bool ModRob::setup(uint8_t module_id, uint8_t bytes_per_port_attribute) {
     ModRob::module_id = module_id;
 
     ModRob::neighbours_id = (uint8_t*)pvPortMalloc(0xFF);
-    ModRob::port_rx_pins = (uint8_t*)pvPortMalloc(0xFF);
     ModRob::neighbours_id_size = 0;
 
-    ModRob::port_locations = (uint8_t*)pvPortMalloc(0xFF*port_location_bytes_nb);
-    ModRob::port_locations_size = 0;
+    ModRob::ports_attributes = (uint8_t*)pvPortMalloc(0xFF*bytes_per_port_attribute);
+    ModRob::ports_attributes_size = 0;
+    ModRob::bytes_per_port_attribute = bytes_per_port_attribute;
 
-    ModRob::module_add_size = 0;
+    ModRob::module_attributes_size = 0;
     /*
     ModRob::devices = (Device*)pvPortMalloc(sizeof(Device)*128);
     ModRob::devices_size = 0;
@@ -19,15 +19,14 @@ bool ModRob::setup(uint8_t module_id, uint8_t port_location_bytes_nb) {
    return 1;
 }
 
-bool ModRob::add_port_rx(uint8_t rx_pin, uint8_t *port_location) {
+bool ModRob::add_port_rx(uint8_t rx_pin, uint8_t *port_attributes) {
     ModRob::multi_uart.add_receiver(rx_pin);
-    /*
-    pinMode(rx_pin, INPUT);
-    uint8_t index = ModRob::neighbours_id_size;
-    ModRob::port_rx_pins[index] = rx_pin;
-    memcpy(ModRob::port_locations, port_location, ModRob::port_locations_size);
+    memcpy( ModRob::ports_attributes + ModRob::ports_attributes_size,
+            port_attributes,
+            ModRob::bytes_per_port_attribute);
+
+    ModRob::ports_attributes_size += ModRob::bytes_per_port_attribute;
     ModRob::neighbours_id_size++;
-    */
     return 1;
 }
 
@@ -43,11 +42,9 @@ bool ModRob::add_device(Device device) {
 }
 */
 
-bool ModRob::set_module_add(uint8_t *additional_bytes, uint16_t additional_bytes_nb) {
-    /*
-    ModRob::module_add_size = additional_bytes_nb;
-    ModRob::module_add = additional_bytes;
-    */
+bool ModRob::set_module_attributes(uint8_t *module_attributes, uint16_t module_attributes_size) {
+    ModRob::module_attributes_size = module_attributes_size;
+    ModRob::module_attributes = module_attributes;
     return 1;
 }
 
@@ -84,29 +81,34 @@ uint16_t ModRob::udp_module_disc(uint8_t *udp_tx_buffer) {
 
 uint16_t ModRob::udp_struct_disc(uint8_t *udp_tx_buffer) {
     Serial.println("Structure discovery");
+    //Update the neighbours id
     ModRob::multi_uart.xfer(9600, 5000, ModRob::module_id, 5000);
+    for(int i=0;i<ModRob::neighbours_id_size;i++) {
+        ModRob::neighbours_id[i] = ModRob::multi_uart.get_value(i);
+    }
 
-    /*
+    uint8_t buffer_length = 0;
+
     //Send neighbour ids
-    ModRob::udp_buffer_tx[0] = ModRob::neighbours_id_size;
-    ModRob::udp.write(ModRob::udp_buffer_tx, 1);
-    ModRob::udp.write(ModRob::neighbours_id, ModRob::udp_buffer_tx[0]);
+    udp_tx_buffer[buffer_length++] = ModRob::neighbours_id_size;
+    memcpy(udp_tx_buffer+buffer_length, ModRob::neighbours_id, ModRob::neighbours_id_size);
+    buffer_length += ModRob::neighbours_id_size;
 
     //Send port locations
-    ModRob::udp_buffer_tx[0] = ModRob::port_locations_size * ModRob::neighbours_id_size;
-    ModRob::udp.write(ModRob::udp_buffer_tx, 1);
-    if(ModRob::port_locations_size > 0) {
-        ModRob::udp.write(ModRob::port_locations, ModRob::udp_buffer_tx[0]);
+    udp_tx_buffer[buffer_length++] = ModRob::ports_attributes_size;
+    if(ModRob::ports_attributes_size > 0) {
+        memcpy(udp_tx_buffer+buffer_length, ModRob::ports_attributes, ModRob::ports_attributes_size);
+        buffer_length += ModRob::ports_attributes_size;
     }
 
     //Send additionnal data
-    ModRob::udp_buffer_tx[0] = ModRob::module_add_size;
-    ModRob::udp.write(ModRob::udp_buffer_tx, 1);
-    if(ModRob::module_add_size > 0) {
-        ModRob::udp.write(ModRob::module_add, ModRob::udp_buffer_tx[0]);
+    udp_tx_buffer[buffer_length++] = ModRob::module_attributes_size;
+    if(ModRob::module_attributes_size > 0) {
+        memcpy(udp_tx_buffer+buffer_length, ModRob::module_attributes, ModRob::module_attributes_size);
+        buffer_length += ModRob::module_attributes_size;
     }
-    */
-   return 1;
+
+   return buffer_length;
 }
 
 uint16_t ModRob::process_udp(uint8_t *packet, uint8_t packet_size, uint8_t *udp_tx_buffer) {

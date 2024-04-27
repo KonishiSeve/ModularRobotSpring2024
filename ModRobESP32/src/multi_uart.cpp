@@ -93,3 +93,11 @@ uint8_t MultiUART::xfer(uint32_t baud, uint32_t timeout_ms, uint16_t tx_byte, ui
     Serial.println("[Transceiving] done");
     return 0;
 }
+
+//returns 0 if the value is not valid
+uint8_t MultiUART::get_value(uint8_t index) {
+    if(MultiUART::receivers[index].uart_state == DONE) {
+        return MultiUART::receivers[index].value;
+    }
+    return 0;
+}

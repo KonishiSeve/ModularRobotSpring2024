@@ -15,11 +15,19 @@ WiFiUDP udp;
 uint8_t udp_buffer_rx[255];
 uint8_t udp_buffer_tx[255];
 
-// --- Module parameters ---
-#define TX_PIN    33
-#define RX_PIN_1  32
-#define RX_PIN_2  17
+// === Module parameters ===
 ModRob module;
+uint8_t module_attributes[] = {0,2, 16,2, 16,(uint8_t)-2, 0,(uint8_t)-2};
+// === ports configuations ===
+//TX pin for all ports
+#define TX_PIN    33
+//port 0
+#define RX_PIN_0  32
+uint8_t port0_location[] = {0,0,1,0};
+//port 1
+#define RX_PIN_1  17
+uint8_t port1_location[] = {16,0,(uint8_t)-1,0};
+
 
 void setup() {
     //Debug
@@ -37,9 +45,11 @@ void setup() {
     udp.begin(wifi_port);
 
     //module setup
-    module.setup(WiFi.localIP()[3], 0);
+    module.setup(WiFi.localIP()[3], sizeof(port0_location));
     module.set_port_tx(TX_PIN);
-    module.add_port_rx(RX_PIN_1, NULL);
+    module.add_port_rx(RX_PIN_0, port0_location);
+    module.add_port_rx(RX_PIN_1, port1_location);
+    module.set_module_attributes(module_attributes, sizeof(module_attributes));
 }
 
 void loop() {
