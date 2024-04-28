@@ -42,6 +42,5 @@ class ModuleGraphics:
             points = []
             for j in range(len(self.outlines[i])):
                 points += [self.outlines[i][j][0], self.outlines[i][j][1]]
-            print(points)
             canvas.create_polygon(points, fill=color, outline="black", width=1)
         canvas.create_line(self.ports_positions[0][0], self.ports_positions[0][1], (self.ports_positions[0][0]+self.ports_orientations[0][0]*30), (self.ports_positions[0][1]+self.ports_orientations[0][1]*30), arrow=tk.LAST)

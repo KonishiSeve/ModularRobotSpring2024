@@ -10,20 +10,18 @@ class ModRob:
     def __init__(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        self.socket.settimeout(5)
+        self.socket.settimeout(0.1)
     
     def module_discovery(self):
         pass
 
-    def structure_discovery(self, timeout=0.2):
+    def structure_discovery(self, timeout=1):
         self.socket.sendto(b'\x00', ("10.42.0.255", 9999))
         module_list = []
         start_time = time.time()
         while(time.time()-start_time < timeout):
             try:
                 data, server = self.socket.recvfrom(1024)
-                print(server)
-                print(data)
                 module_list.append(self.parse_structure_discovery(server[0].split(".")[-1], data))
             except:
                 return module_list
