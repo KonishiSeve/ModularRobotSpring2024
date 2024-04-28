@@ -48,7 +48,7 @@ class ModRob:
         data_index += 1
         module_attributes = [to_8bits_signed(data[data_index+i]) for i in range(module_attributes_size)]
 
-        return {"module_id": module_id, "neighbours": neighbours, "ports_attributes": ports_attributes, "module_attributes": module_attributes}
+        return {"module_id": int(module_id), "neighbours": neighbours, "ports_attributes": ports_attributes, "module_attributes": module_attributes}
 
     def write_command(self):
         pass

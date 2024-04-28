@@ -18,18 +18,13 @@ bool MultiUART::set_transmitter(uint8_t tx_pin) {
 bool MultiUART::add_receiver(uint8_t pin) {
     if(MultiUART::receivers_size < MAX_RECEIVERS) {
         MultiUART::receivers[MultiUART::receivers_size++].pin = pin;
-        pinMode(pin, INPUT);
+        pinMode(pin, INPUT_PULLDOWN);
         return true;
     }
     return false;
 }
 
 uint8_t MultiUART::xfer(uint32_t baud, uint32_t timeout_ms, uint16_t tx_byte, uint32_t tx_delay_us) {
-    //DEBUG
-    #define DEBUG_PIN   25
-    pinMode(DEBUG_PIN, OUTPUT);
-    digitalWrite(DEBUG_PIN, LOW);
-
     //initialize all the states
     Serial.println("In Xfer");
     digitalWrite(MultiUART::tx_pin, HIGH);
@@ -59,8 +54,6 @@ uint8_t MultiUART::xfer(uint32_t baud, uint32_t timeout_ms, uint16_t tx_byte, ui
     uint8_t tx_byte_index = 0;
 
     uint32_t us_per_bit = 1e6/(baud);
-
-    digitalWrite(DEBUG_PIN, HIGH);
 
     while(timer_value < timeout_time && (idle_counter > 0 || tx_byte_index < 10)) { //(timer_value < timeout_time && idle_counter > 0)
         timer_value = (uint32_t)timerReadMicros(MultiUART::Timer);
