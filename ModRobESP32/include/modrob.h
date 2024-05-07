@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include "multi_uart.h"
+#include "device.h"
 
 /*
 #define PORT_NB             1
@@ -33,10 +34,8 @@ class ModRob {
 
 
         //Device properties
-        /*
         Device *devices;
         uint8_t devices_size;
-        */
 
         //functions mapped to udp commands
         uint16_t udp_struct_disc(uint8_t *udp_tx_buffer);
@@ -50,7 +49,7 @@ class ModRob {
         bool add_port_rx(uint8_t rx_pin, uint8_t *port_attributes);
         bool set_port_tx(uint8_t tx_pin);
 
-        //bool add_device(Device device);
+        bool add_device(Device device);
         bool set_module_attributes(uint8_t *module_attributes, uint16_t module_attributes_size);
 
     //online

@@ -12,11 +12,31 @@ class ModRob:
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         self.socket.settimeout(0.1)
     
-    def module_discovery(self):
-        pass
+    def module_discovery(self, module_id, timeout=1):
+        self.socket.sendto(b'\x00\x01', ("10.42.0.{0}".format(module_id), 9999))
+        start_time = time.time()
+        try:
+            data, server = self.socket.recvfrom(1024)
+        except:
+            return None
+        return self.parse_model_discovery(server[0].split(".")[-1], data)
+    
+    def parse_model_discovery(self, module_id, data):
+        device_list = []
+        index = 0
+        id_counter = 1
+        while index < len(data):
+            device_length = data[index]
+            device_list.append({"id": id_counter,
+                                "command_size": data[index+1],
+                                "data_size": data[index+2],
+                                "device_attributes":data[index+3:index+device_length+1]})
+            id_counter += 1
+            index += device_length + 1
+        return {"module_id":int(module_id) , "devices":device_list}
 
     def structure_discovery(self, timeout=1):
-        self.socket.sendto(b'\x00', ("10.42.0.255", 9999))
+        self.socket.sendto(b'\x00\x00', ("10.42.0.255", 9999))
         module_list = []
         start_time = time.time()
         while(time.time()-start_time < timeout):
@@ -48,12 +68,20 @@ class ModRob:
 
         return {"module_id": int(module_id), "neighbours": neighbours, "ports_attributes": ports_attributes, "module_attributes": module_attributes}
 
-    def write_command(self):
-        pass
+    def write_command(self, target_module, target_device, command):
+        byte0 = (1<<7) + (target_device&(0b01111111))
+        print(byte0)
+        payload = bytearray([byte0] + command)
+        self.socket.sendto(payload, ("10.42.0.{0}".format(target_module), 9999))
 
-    def read_data(self):
-        pass
-
+    def read_data(self, target_module, target_device):
+        byte0 = target_device&(0b01111111)
+        self.socket.sendto(bytearray([byte0]), ("10.42.0.{0}".format(target_module), 9999))
+        try:
+            data, server = self.socket.recvfrom(1024)
+            return data
+        except:
+            return None
 
 if __name__ == "__main__":
     robot = ModRob()

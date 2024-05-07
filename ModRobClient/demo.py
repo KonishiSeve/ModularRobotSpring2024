@@ -7,6 +7,8 @@ import time
 from Visualizer import ModuleGraphics
 from ModRobClient import ModRob
 
+#wireshark filter: udp && data && udp.port==9999
+
 def sd_draw(module_list, canvas, focus_module_id):
     root_module = None
     smallest_module_id = 255
@@ -67,6 +69,29 @@ def shell(canvas):
                 sd_draw(module_list, canvas, focus_module_id)
             else:
                 print("[ERROR] No module found")
+
+        elif(command[0] == "md"):
+            if(len(command) != 2):
+                print("[ERROR] need 1 argument for md")
+                continue
+            device_list = robot.module_discovery(int(command[1]))
+            if len(device_list):
+                for dev in device_list['devices']:
+                    print(dev)
+            else:
+                print("[ERROR] Module could not be reached")
+        
+        elif(command[0] == "w"):
+            if(len(command) <= 3):
+                print("[ERROR] need at least 3 argument for writing (target module, target device, command)")
+                continue
+            robot.write_command(int(command[1]), int(command[2]), [int(i) for i in command[3:]])
+
+        elif(command[0] == "r"):
+            if(len(command) <= 2):
+                print("[ERROR] need 2 argument for reading (target module, target device)")
+                continue
+            print(robot.read_data(int(command[1]), int(command[2])))
 
 
 
