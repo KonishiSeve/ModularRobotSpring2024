@@ -5,23 +5,14 @@
 #include "multi_uart.h"
 #include "device.h"
 
-/*
-#define PORT_NB             1
-uint8_t neighbours_ip[PORT_NB];
-#define PORT_LOC_BYTES_NB   0
-uint8_t port_locations[PORT_NB*PORT_LOC_BYTES_NB];
-#define MODULE_ADD_NB       1
-uint8_t module_add[MODULE_ADD_NB];
-*/
-
 class ModRob {
     private:
-        //Module properties
+        //Module attributes
         uint8_t module_id;
         uint8_t *module_attributes;
         uint8_t module_attributes_size;
 
-        //Port properties
+        //Port attributes
         uint8_t *neighbours_id;
         uint8_t neighbours_id_size;
 
@@ -33,9 +24,10 @@ class ModRob {
         MultiUART multi_uart;
 
 
-        //Device properties
+        //Device attributes
         Device *devices;
         uint8_t devices_size;
+        uint8_t devices_size_max;
 
         //functions mapped to udp commands
         uint16_t udp_struct_disc(uint8_t *udp_tx_buffer);
@@ -44,8 +36,8 @@ class ModRob {
         uint16_t udp_read_data(uint8_t *packet, uint8_t packet_size, uint8_t *udp_tx_buffer);
 
     public:
-    //internal properties
-        bool setup(uint8_t module_id, uint8_t bytes_per_port_attribute);
+    //internal properties, used to setup and configure the module
+        bool setup(uint8_t module_id, uint8_t bytes_per_port_attribute, uint8_t max_devices_number);
         bool add_port_rx(uint8_t rx_pin, uint8_t *port_attributes);
         bool set_port_tx(uint8_t tx_pin);
 

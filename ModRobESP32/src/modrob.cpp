@@ -2,7 +2,7 @@
 #include "multi_uart.h"
 #include "device.h"
 
-bool ModRob::setup(uint8_t module_id, uint8_t bytes_per_port_attribute) {
+bool ModRob::setup(uint8_t module_id, uint8_t bytes_per_port_attribute, uint8_t max_devices_number) {
     ModRob::module_id = module_id;
 
     ModRob::neighbours_id = (uint8_t*)pvPortMalloc(0xFF);
@@ -14,8 +14,9 @@ bool ModRob::setup(uint8_t module_id, uint8_t bytes_per_port_attribute) {
 
     ModRob::module_attributes_size = 0;
 
-    ModRob::devices = (Device*)pvPortMalloc(sizeof(Device)*16);
+    ModRob::devices = (Device*)pvPortMalloc(sizeof(Device)*max_devices_number);
     ModRob::devices_size = 0;
+    ModRob::devices_size_max = max_devices_number;
     return 1;
 }
 
@@ -38,8 +39,11 @@ bool ModRob::set_port_tx(uint8_t tx_pin) {
 }
 
 bool ModRob::add_device(Device device) {
-    ModRob::devices[ModRob::devices_size++] = device;
-    return 1;
+    if(ModRob::devices_size < ModRob::devices_size_max) {
+        ModRob::devices[ModRob::devices_size++] = device;
+        return 1;
+    }
+    return 0;
 }
 
 bool ModRob::set_module_attributes(uint8_t *module_attributes, uint16_t module_attributes_size) {
@@ -49,21 +53,20 @@ bool ModRob::set_module_attributes(uint8_t *module_attributes, uint16_t module_a
 }
 
 uint16_t ModRob::udp_write_command(uint8_t *packet, uint8_t packet_size, uint8_t *udp_tx_buffer) {
-    Serial.printf("Write to device %d\n\r", packet[0]&(~(1<<7)));
-    udp_tx_buffer[0] = 0x23;
     uint8_t target_device = packet[0]&(~(1<<7));
     ModRob::devices[target_device-1].set_command(packet+1,packet_size-1);
    return 0;
 }
 
 uint16_t ModRob::udp_read_data(uint8_t *packet, uint8_t packet_size, uint8_t *udp_tx_buffer) {
-    Serial.printf("Read from device %d\n\r", packet[0]&(~(1<<7)));
     uint8_t target_device = packet[0]&(~(1<<7));
-    return ModRob::devices[target_device-1].get_data(udp_tx_buffer);
+    if(target_device <= ModRob::devices_size) {
+        return ModRob::devices[target_device-1].get_data(udp_tx_buffer);
+    }
+    return 0;
 }
 
 uint16_t ModRob::udp_module_disc(uint8_t *udp_tx_buffer) {
-    Serial.println("Module discovery");
     //Send number of devices
     uint8_t index = 0;
     for(int i=0;i<ModRob::devices_size;i++) {
@@ -77,7 +80,6 @@ uint16_t ModRob::udp_module_disc(uint8_t *udp_tx_buffer) {
 }
 
 uint16_t ModRob::udp_struct_disc(uint8_t *udp_tx_buffer) {
-    Serial.println("Structure discovery");
     //Update the neighbours id
     ModRob::multi_uart.xfer(9600, 5000, ModRob::module_id, 5000);
     for(int i=0;i<ModRob::neighbours_id_size;i++) {

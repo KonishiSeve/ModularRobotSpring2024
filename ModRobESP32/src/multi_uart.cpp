@@ -3,7 +3,7 @@
 // ===== Configuration functions =====
 
 MultiUART::MultiUART(void) {
-    //initialize the timer
+    //initialize the timer, 1 tick per us
     MultiUART::Timer = timerBegin(0, 80, true);
 }
 
@@ -16,6 +16,7 @@ bool MultiUART::set_transmitter(uint8_t tx_pin) {
 }
 
 bool MultiUART::add_receiver(uint8_t pin) {
+    //setup a pin as software UART receiver
     if(MultiUART::receivers_size < MAX_RECEIVERS) {
         MultiUART::receivers[MultiUART::receivers_size++].pin = pin;
         pinMode(pin, INPUT_PULLDOWN);
@@ -25,12 +26,11 @@ bool MultiUART::add_receiver(uint8_t pin) {
 }
 
 uint8_t MultiUART::xfer(uint32_t baud, uint32_t timeout_ms, uint16_t tx_byte, uint32_t tx_delay_us) {
-    //initialize all the states
-    Serial.println("In Xfer");
+    // === initialize all the states ===
     digitalWrite(MultiUART::tx_pin, HIGH);
     uint8_t idle_counter = 0;
     for(int i=0;i<MultiUART::receivers_size;i++) {
-        //detect if each port has a neighbour connected or not
+        //for each port, look if it has a module connected to it
         if(digitalRead(MultiUART::receivers[i].pin)) {
             MultiUART::receivers[i].uart_state = IDLE;
             MultiUART::receivers[i].value = 0;
@@ -42,24 +42,24 @@ uint8_t MultiUART::xfer(uint32_t baud, uint32_t timeout_ms, uint16_t tx_byte, ui
         }
     }
 
-    Serial.printf("[Transceiving] IDLE counter : %d \n\r", idle_counter);
-    //Tranceiving phase
+    // === Tranceiving phase ===
     timerRestart(MultiUART::Timer);
     volatile uint32_t timer_value = (uint32_t)timerReadMicros(MultiUART::Timer);
-
+    //timer value of when to stop
     uint32_t timeout_time = timer_value + timeout_ms*1000;
-    //transmitter variables
+    //timer value of when to start transmitting (after tx_delay_us)
     uint32_t tx_next_write_time = timer_value + tx_delay_us;
     tx_byte = (tx_byte << 1) | (1 << 9); //adding start bit and stop bit
     uint8_t tx_byte_index = 0;
 
     uint32_t us_per_bit = 1e6/(baud);
 
-    while(timer_value < timeout_time && (idle_counter > 0 || tx_byte_index < 10)) { //(timer_value < timeout_time && idle_counter > 0)
+    //Run the loop unit all connected receivers got something and the transmitter is done (or timeout)
+    while(timer_value < timeout_time && (idle_counter > 0 || tx_byte_index < 10)) {
         timer_value = (uint32_t)timerReadMicros(MultiUART::Timer);
         //receiving
         for(int i=0;i<MultiUART::receivers_size;i++) {
-            //start the receiving
+            //start receiving
             if(MultiUART::receivers[i].uart_state==IDLE && digitalRead(MultiUART::receivers[i].pin)==LOW) {
                 MultiUART::receivers[i].uart_state = RUNNING;
                 MultiUART::receivers[i].next_sample_time = timer_value + us_per_bit + us_per_bit/2; //ignore start bit and sample in the middle of the next bit
@@ -81,13 +81,10 @@ uint8_t MultiUART::xfer(uint32_t baud, uint32_t timeout_ms, uint16_t tx_byte, ui
             tx_next_write_time += us_per_bit;
         }
     }
-    Serial.println(MultiUART::receivers[0].value);
-    Serial.println(MultiUART::receivers[1].value);
-    Serial.println("[Transceiving] done");
     return 0;
 }
 
-//returns 0 if the value is not valid
+//Get the last value read by a receiver (returns 0 if the value is not valid)
 uint8_t MultiUART::get_value(uint8_t index) {
     if(MultiUART::receivers[index].uart_state == DONE) {
         return MultiUART::receivers[index].value;

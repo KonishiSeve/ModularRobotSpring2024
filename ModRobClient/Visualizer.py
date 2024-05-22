@@ -26,7 +26,7 @@ class ModuleGraphics:
         A = np.array([[np.cos(angle), -np.sin(angle)],[np.sin(angle), np.cos(angle)]])
         for i in range(len(self.ports_positions)):
             #self.ports_positions[i] = A @ (np.array(self.ports_positions[i]) + displacement - new_position) + new_position
-            self.ports_positions[i] = A @ (np.array(self.ports_positions[i]) - port_position) + port_position + displacement
+            self.ports_positions[i] = (graphic_scaling*A) @ (np.array(self.ports_positions[i]) - port_position) + port_position + displacement
 
         for i in range(len(self.ports_orientations)):
             self.ports_orientations[i] = np.array(self.ports_orientations[i])
@@ -38,9 +38,18 @@ class ModuleGraphics:
                 self.outlines[i][j] = (graphic_scaling*A) @ (np.array(self.outlines[i][j]) - port_position) + port_position + displacement
 
     def draw(self, canvas, color):
+        module_center = [0,0]
+        nb_points = 0
         for i in range(len(self.outlines)):
             points = []
             for j in range(len(self.outlines[i])):
                 points += [self.outlines[i][j][0], self.outlines[i][j][1]]
+                module_center[0] += self.outlines[i][j][0]
+                module_center[1] += self.outlines[i][j][1]
+                nb_points += 1
             canvas.create_polygon(points, fill=color, outline="black", width=1)
         canvas.create_line(self.ports_positions[0][0], self.ports_positions[0][1], (self.ports_positions[0][0]+self.ports_orientations[0][0]*30), (self.ports_positions[0][1]+self.ports_orientations[0][1]*30), arrow=tk.LAST)
+        
+        module_center[0] = int(module_center[0]/nb_points)
+        module_center[1] = int(module_center[1]/nb_points)
+        canvas.create_text(module_center[0], module_center[1], text=str(self.id), fill="white")

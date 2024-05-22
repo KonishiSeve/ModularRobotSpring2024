@@ -6,9 +6,8 @@
 #include <HardwareSerial.h>
 
 #define MAX_RECEIVERS       16
-#define UART_TX_PIN         19
-#define UART_RX_PIN         18
 
+//states for the UART receivers
 enum UART_STATE {
   DISCONNECTED,
   IDLE,
@@ -16,6 +15,7 @@ enum UART_STATE {
   DONE
 };
 
+//variables for a UART receiver
 typedef struct UartReceiver {
   //variables
   uint32_t next_sample_time;
@@ -25,7 +25,6 @@ typedef struct UartReceiver {
 
   //configuration
   uint8_t pin;
-  uint32_t baud;
 
 } UartReceiver;
 

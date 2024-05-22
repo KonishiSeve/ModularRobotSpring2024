@@ -66,7 +66,8 @@ def shell(canvas):
         if(command[0] == "sd"):
             module_list = robot.structure_discovery()
             if len(module_list) > 0:
-                sd_draw(module_list, canvas, focus_module_id)
+                print(*module_list, sep="\n")
+                #sd_draw(module_list, canvas, focus_module_id)
             else:
                 print("[ERROR] No module found")
 
