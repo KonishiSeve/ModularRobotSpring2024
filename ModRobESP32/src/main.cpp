@@ -7,11 +7,13 @@
 #include "WiFi.h"
 #include <WiFiUdp.h>
 
-//Module type
-//#define MODULE_OCTA
-#define MODULE_JOINT
+// === Module type ===
+#define MODULE_OCTA
+//#define MODULE_JOINT
 //#define MODULE_BRANCH
 
+//utility
+#define INT16_TO_UINT8(value)  (uint8_t)((value)>>8),(uint8_t)((value)&0xFF)
 
 // --- Wifi parameters ---
 const char* wifi_ssid = "ModRob";
@@ -25,7 +27,17 @@ uint8_t udp_buffer_tx[255];
 ModRob module;
 
 #if defined(MODULE_OCTA)
-uint8_t module_attributes[] = {0,2, 16,2, 16,(uint8_t)-2, 0,(uint8_t)-2};
+uint8_t module_attributes[] = { //List of 2D points
+                                INT16_TO_UINT8(0), INT16_TO_UINT8(-24),
+                                INT16_TO_UINT8(33), INT16_TO_UINT8(-57),
+                                INT16_TO_UINT8(80), INT16_TO_UINT8(-57),
+                                INT16_TO_UINT8(113), INT16_TO_UINT8(-24),
+                                INT16_TO_UINT8(113), INT16_TO_UINT8(24),
+                                INT16_TO_UINT8(80), INT16_TO_UINT8(57),
+                                INT16_TO_UINT8(33), INT16_TO_UINT8(57),
+                                INT16_TO_UINT8(0), INT16_TO_UINT8(24)
+                            };
+
 #elif defined(MODULE_JOINT)
 //convert list of 2D points in int16 format in millimeters to list of uint8 MSB first
 uint8_t module_attributes[] = {//(0,20) int16
@@ -43,8 +55,14 @@ uint8_t module_attributes[] = {//(0,20) int16
                                 0,0,
                                 (uint8_t)((-20)>>8), (uint8_t)((-20)&(0xFF))
                                 };
+
 #elif defined(MODULE_BRANCH)
-uint8_t module_attributes[] = {0,2, 16,2, 16,(uint8_t)-2, 0,(uint8_t)-2};
+uint8_t module_attributes[] = { //List of 2D points
+                                INT16_TO_UINT8(0), INT16_TO_UINT8(31),
+                                INT16_TO_UINT8(84), INT16_TO_UINT8(31),
+                                INT16_TO_UINT8(84), INT16_TO_UINT8(-31),
+                                INT16_TO_UINT8(0), INT16_TO_UINT8(-31)
+                            };
 #endif
 
 // === ports configuations ===
@@ -60,6 +78,55 @@ uint8_t module_attributes[] = {0,2, 16,2, 16,(uint8_t)-2, 0,(uint8_t)-2};
 #define RX_PIN_7    22
 
 #if defined(MODULE_OCTA)
+uint8_t port0_location[] = {
+                            //(0,0) 2D point
+                            INT16_TO_UINT8(0),
+                            INT16_TO_UINT8(0),
+                            //(1,0) 2D vector
+                            1,0};
+uint8_t port1_location[] = {
+                            //(0,0) 2D point
+                            INT16_TO_UINT8(17),
+                            INT16_TO_UINT8(-40),
+                            //(1,0) 2D vector
+                            1,1};
+uint8_t port2_location[] = {
+                            //(0,0) 2D point
+                            INT16_TO_UINT8(57),
+                            INT16_TO_UINT8(-57),
+                            //(1,0) 2D vector
+                            0,1};
+uint8_t port3_location[] = {
+                            //(0,0) 2D point
+                            INT16_TO_UINT8(97),
+                            INT16_TO_UINT8(-40),
+                            //(1,0) 2D vector
+                            (uint8_t)(-1),1};
+uint8_t port4_location[] = {
+                            //(0,0) 2D point
+                            INT16_TO_UINT8(113),
+                            INT16_TO_UINT8(0),
+                            //(1,0) 2D vector
+                            (uint8_t)(-1),0};
+uint8_t port5_location[] = {
+                            //(0,0) 2D point
+                            INT16_TO_UINT8(97),
+                            INT16_TO_UINT8(40),
+                            //(1,0) 2D vector
+                            (uint8_t)(-1), (uint8_t)(-1)};
+uint8_t port6_location[] = {
+                            //(0,0) 2D point
+                            INT16_TO_UINT8(57),
+                            INT16_TO_UINT8(57),
+                            //(1,0) 2D vector
+                            0,(uint8_t)(-1)};
+uint8_t port7_location[] = {
+                            //(0,0) 2D point
+                            INT16_TO_UINT8(17),
+                            INT16_TO_UINT8(40),
+                            //(1,0) 2D vector
+                            1,(uint8_t)(-1)};
+
 #elif defined(MODULE_JOINT)
 //2D point (int16) and 2D vector (int8)
 uint8_t port0_location[] = {
@@ -71,11 +138,36 @@ uint8_t port0_location[] = {
 
 uint8_t port1_location[] = {
                             //(160,0) 2D point
-                            (uint8_t)(160>>8), (uint8_t)(160&(0xFF)),
+                            INT16_TO_UINT8(160),
                             0,0,
                             //(-1,0) 2D vector
                             (uint8_t)-1,0};
+                            
 #elif defined(MODULE_BRANCH)
+//2D point (int16) and 2D vector (int8)
+uint8_t port0_location[] = {
+                            //(0,0) 2D point
+                            INT16_TO_UINT8(0), INT16_TO_UINT8(0),
+                            //(1,0) 2D vector
+                            1,0};
+
+uint8_t port1_location[] = {
+                            //(0,0) 2D point
+                            INT16_TO_UINT8(42), INT16_TO_UINT8(-31),
+                            //(1,0) 2D vector
+                            0,1};
+
+uint8_t port2_location[] = {
+                            //(0,0) 2D point
+                            INT16_TO_UINT8(84), INT16_TO_UINT8(0),
+                            //(1,0) 2D vector
+                            (uint8_t)-1,0};
+
+uint8_t port3_location[] = {
+                            //(0,0) 2D point
+                            INT16_TO_UINT8(42), INT16_TO_UINT8(31),
+                            //(1,0) 2D vector
+                            0,(uint8_t)-1};
 #endif
 
 // === devices definitions ===
@@ -129,12 +221,22 @@ void setup() {
     module.set_port_tx(TX_PIN);
     module.add_port_rx(RX_PIN_0, port0_location);
     module.add_port_rx(RX_PIN_1, port1_location);
+    #if defined(MODULE_OCTA) || defined(MODULE_BRANCH)
+    module.add_port_rx(RX_PIN_2, port2_location);
+    module.add_port_rx(RX_PIN_3, port3_location);
+    #endif
+    #if defined(MODULE_OCTA)
+    module.add_port_rx(RX_PIN_4, port4_location);
+    module.add_port_rx(RX_PIN_5, port5_location);
+    module.add_port_rx(RX_PIN_6, port6_location);
+    module.add_port_rx(RX_PIN_7, port7_location);
+    #endif
     module.set_module_attributes(module_attributes, sizeof(module_attributes));
 
     //device adding
     pinMode(32, OUTPUT);
-    xTaskCreate(servo_task, "ServoTask", 1024, NULL, 1, &servo_task_handle);
-    module.add_device(device1);
+    //xTaskCreate(servo_task, "ServoTask", 1024, NULL, 1, &servo_task_handle);
+    //module.add_device(device1);
     module.add_device(device2);
 }
 
@@ -142,6 +244,7 @@ void loop() {
   int packetSize = udp.parsePacket();
   if (packetSize) {
     //Serial.println("packet received");
+    digitalWrite(32, HIGH);
     int len = udp.read(udp_buffer_rx, 0xFF);
 
     uint16_t tx_len = module.process_udp(udp_buffer_rx, len, udp_buffer_tx);
@@ -150,5 +253,6 @@ void loop() {
         udp.write(udp_buffer_tx, tx_len);
         udp.endPacket();
     }
+    digitalWrite(32, LOW);
   }
 }
