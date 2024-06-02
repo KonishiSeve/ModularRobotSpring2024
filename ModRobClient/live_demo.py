@@ -5,8 +5,6 @@ import threading
 import time
 import socket
 
-import serial
-
 from Visualizer import ModuleGraphics
 from ModRobClient import ModRob
 
@@ -56,7 +54,7 @@ def interface(canvas):
             print(sensor_values)
         visited_id = []
         # next call -> [module_data, port_number, port_position_of_caller, port_orientation of caller]
-        next_calls = [[root_module, 0, np.array([360,360]), np.array([0,-1])]]
+        next_calls = [[root_module, 0, np.array([500,500]), np.array([0,-1])]]
         visited_id.append(root_module["module_id"])
         canvas.delete("all")
         while len(next_calls):
@@ -80,11 +78,10 @@ def interface(canvas):
                                                 grap_module.ports_orientations[current_module_port]
                                                 ])
             next_calls = new_next_calls
-        time.sleep(0.5)
 
 if __name__ == "__main__":
     root = tk.Tk()
-    canvas = tk.Canvas(root, height=720, width=720)
+    canvas = tk.Canvas(root, height=1080, width=1080)
     canvas.pack()
 
     window_thread = threading.Thread(target=interface, args=(canvas,) ,daemon=True)

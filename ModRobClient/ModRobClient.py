@@ -1,8 +1,5 @@
 import time
 import socket
-import serial #[DEBUG]
-
-serial_port = serial.Serial("COM14") #[DEBUG]
 
 class ModRob:
     def __init__(self, ip, module_udp_port, timeout_milliseconds):
@@ -18,8 +15,6 @@ class ModRob:
     
     def module_discovery(self, module_id):
         #send packet that corresponds to module discovery
-        serial_port = serial.Serial("COM14") #[DEBUG]
-        serial_port.write(b"1")#[DEBUG]
         self.socket.sendto(b'\x00\x01', ("{0}.{1}".format(self.ip_base, module_id), self.module_udp_port))
         #receive the response packet
         try:
@@ -46,14 +41,12 @@ class ModRob:
 
     def structure_discovery(self, timeout=1):
         #send packet that corresponds to structure discovery via the broadcast address (255)
-        serial_port.write(b"1")#[DEBUG]
         self.socket.sendto(b'\x00\x00', ("{0}.{1}".format(self.ip_base, 255), self.module_udp_port))
         module_list = []
         #receive the response packets
         while(1):
             try:
                 data, server = self.socket.recvfrom(1024)
-                serial_port.write(b"2")#[DEBUG]
                 module_list.append(self.parse_structure_discovery(server[0].split(".")[-1], data))
             except:
                 return module_list
