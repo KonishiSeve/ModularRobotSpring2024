@@ -1,19 +1,20 @@
+import time
 import socket
 
 class ModRob:
     def __init__(self, ip, module_udp_port, timeout_milliseconds):
         #save the ip address except the last number
         self.ip_base = "{0}.{1}.{2}".format(ip.split(".")[0], ip.split(".")[1], ip.split(".")[2])
-        #save the udp port number the ESP32 are listening to (9999 by default)
+        #save the udp port number the ESP32 are listening to
         self.module_udp_port = module_udp_port
 
-        #configuring the socket
+        #configurint the socket
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.settimeout(timeout_milliseconds/1000.0)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
     
     def module_discovery(self, module_id):
-        #send packet that corresponds to module discovery (which is [0x00, 0x01])
+        #send packet that corresponds to module discovery
         self.socket.sendto(b'\x00\x01', ("{0}.{1}".format(self.ip_base, module_id), self.module_udp_port))
         #receive the response packet
         try:
@@ -39,7 +40,7 @@ class ModRob:
         return {"module_id":int(module_id) , "devices":device_list}
 
     def structure_discovery(self, timeout=1):
-        #send packet that corresponds to structure discovery ([0x00,0x00]) via the broadcast address (255)
+        #send packet that corresponds to structure discovery via the broadcast address (255)
         self.socket.sendto(b'\x00\x00', ("{0}.{1}".format(self.ip_base, 255), self.module_udp_port))
         module_list = []
         #receive the response packets
@@ -88,3 +89,34 @@ class ModRob:
             return data
         except:
             return None
+
+def convert_port_positions(ports_attributes):
+    return_list = []
+    for attribute in ports_attributes:
+        return_list.append([int.from_bytes(attribute[:2], "big", signed=True),
+                            int.from_bytes(attribute[2:4], "big", signed=True)])
+    return return_list
+
+def convert_port_orientation(ports_attributes):
+    return_list = []
+    for attribute in ports_attributes:
+        return_list.append([int.from_bytes(attribute[4:5], "big", signed=True),
+                            int.from_bytes(attribute[5:], "big", signed=True)])
+    return return_list
+
+def convert_module_outline(module_attributes):
+    return [[int.from_bytes(module_attributes[(i*4):(i*4+2)],"big",signed=True),
+             int.from_bytes(module_attributes[(i*4+2):(i*4+4)],"big",signed=True)] for i in range(int(len(module_attributes)/4))]
+
+if __name__ == "__main__":
+    robot = ModRob(ip=socket.gethostbyname(socket.gethostname()), module_udp_port=9999,timeout_milliseconds=500)
+    module_list = robot.structure_discovery()
+    #device_list = robot.module_discovery(module_list[0]["module_id"])
+    print(*module_list, sep="\n")
+    print(convert_port_positions(module_list[0]['ports_attributes']))
+    print(convert_port_orientation(module_list[0]['ports_attributes']))
+    print(convert_module_outline(module_list[0]['module_attributes']))
+    #print("Modules:")
+    #print(*module_list, sep="\n")
+    #print("Devices of first module")
+    #print(*(device_list['devices']), sep="\n")

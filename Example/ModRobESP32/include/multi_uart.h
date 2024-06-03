@@ -1,10 +1,9 @@
 #ifndef MULTI_UART_H
 #define MULTI_UART_H
 
-//This file implements Multiple UART receivers that can listen at the same time
-//This is used by the ModRob class
 
 #include <Arduino.h>
+#include <HardwareSerial.h>
 
 #define MAX_RECEIVERS       16
 
@@ -49,7 +48,6 @@ class MultiUART {
                      uint16_t tx_byte, uint32_t tx_delay_us); //Rx and Tx over UART
             //This function will first start all receivers and send the tx_byte after tx_delay_us microseconds
 
-        //retrieve the last value read by the receiver with index "index"
         uint8_t get_value(uint8_t index);
 
 };
