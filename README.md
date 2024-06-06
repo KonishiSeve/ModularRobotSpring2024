@@ -2,13 +2,15 @@
 
 ## File structure
 
-- ModRobESP32 ("server"/firmware side of the framework): contains a ESP32 PlatformIO project in the Arduino framework that needs to be filled in and flashed to a module
-- ModRobClient (client side of the framework): Python library that the controller can call to interact with the robot
-- Example
-    - ModRobESP32: a modified firmware that was used to flash 3 types of modules for the demonstration robot
-    - ModRobClient
-        - Visualizer.py: library for this specific example that helps displaying a module on screen
-        - live_demo.py: Can be run to display a visualization of the demonstration robot in real time
+.
+├── ModRobClient
+│   └── ModRobClient.py:   Python libary to allow the controller to interact with the robot
+├── ModRobESP32:           ESP32 Arduino PlatformIO project template, firmware side of the framework
+└── Examples:              application of the framework for a demonstration robot
+    ├── ModRobClient
+    │   ├── live_demo.py:  diplays a real-time representation of the demonstration robot by using the ModRobClient.py library
+    │   └── Visualizer.py: helps to display the modules on screen for live_demo.py
+    └── ModRobESP32:       Firmware side of the framework applied to the demonstration robot, only main.ccp was modified
 
 
 ## Firmware Side
@@ -35,6 +37,27 @@ These files define the Device class. The user should create an instance for each
 These files contain a software implementation of UART that can listen to multiple pins at the same time. It is used for structure discovery by the ModRob class
 
 ## Client Side
+The controller can interact with the robot by using the ModRobClient.py library. A robot object needs to be instantiated and 4 different methods can be called:
+
+### structure_discovery()
+Broadcasts a structure discovery packet to all the modules and returns a list of dictionaries. Returns one dictionary per module with the following keys:
+- "module_id": number; id of the module
+- "ports_states" list of numbers; length is the number of ports (number of time add_port_rx() was called in the firmware). the number is the ID of the module connected to the port with this index (the first number of the list is the ID of the module connected to port 0). The ID is zero if no module is connected.
+- "ports_attributes": list of bytearrays; list of the port attributes (assigned when calling add_port_rx() in the firmware)
+- "module_attributes": bytearray; module attributes (assigned with set_module_attributes() in the firmware)
+
+### module_discovery(module_id)
+Sends a module discovery packet to the target module and returns a dictionary with a "module_id" key containing the target module ID and a "devices" key which contains a list of dictionaries, the length of this list is equal to the number of devices on the target module (number of times add_device() was called in the firmware). Each device dictionary contains the following keys:
+- "id": number; the device ID (starts at 1)
+- "command_size" number; number of command bytes the device takes ("commands_size" argument in the Device class constructor in the firmware)
+- "data_size" number; number of data bytes the device returns ("data_size" argument in the Device class constructor in the firmware)
+- "device_attributes": bytearray; device attributes ("attributes" argument in the Device class constructor in the firmware)
+
+### read_data(target_module, target_device)
+Sends a read data packet to the target_device of a target_module. This calls the function whose handle was given to the Device object constructor as the "update_commands" argument in the firmware and does not return anything
+
+### write_command(target_module, target_device, command)
+Sends a write data packet to the target_device of a target_module. This calls the function whose handle was given to the Device object constructor as the "update_data" argument in the firmware and the return of this function is returned here as a bytearray
 
 
 ## UDP packets
@@ -147,16 +170,23 @@ response packet: The raw bytes only, the length should be known from the module 
 request packet:
 <table class="tg"><thead>
   <tr>
-    <th class="tg-baqh" colspan="2">Byte 0</th>
+    <th class="tg-c3ow">Byte 0</th>
+    <th class="tg-c3ow">Byte 1</th>
+    <th class="tg-c3ow">Byte 2</th>
+    <th class="tg-c3ow"></th>
+    <th class="tg-c3ow">Byte N</th>
   </tr></thead>
 <tbody>
   <tr>
-    <td class="tg-baqh">bit 7</td>
-    <td class="tg-baqh">bit 6:0</td>
+    <td class="tg-c3ow">bit 7</td>
+    <td class="tg-c3ow">bit 6:0</td>
+    <td class="tg-c3ow" rowspan="2">First command byte</td>
+    <td class="tg-c3ow" rowspan="2">...</td>
+    <td class="tg-c3ow" rowspan="2">Last command byte</td>
   </tr>
   <tr>
-    <td class="tg-baqh">1</td>
-    <td class="tg-baqh">device ID<br>(1 to 127)</td>
+    <td class="tg-c3ow">1</td>
+    <td class="tg-c3ow">device ID<br>(1 to 127)</td>
   </tr>
 </tbody>
 </table>

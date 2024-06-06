@@ -20,7 +20,6 @@ bool ModRob::setup(uint8_t module_id, uint8_t bytes_per_port_attribute, uint8_t 
     return 1;
 }
 
-//Done
 bool ModRob::add_port_rx(uint8_t rx_pin, uint8_t *port_attributes) {
     ModRob::multi_uart.add_receiver(rx_pin);
     memcpy( ModRob::ports_attributes + ModRob::ports_attributes_size,
@@ -32,7 +31,6 @@ bool ModRob::add_port_rx(uint8_t rx_pin, uint8_t *port_attributes) {
     return 1;
 }
 
-//Done
 bool ModRob::set_port_tx(uint8_t tx_pin) {
     ModRob::multi_uart.set_transmitter(tx_pin);
     return 1;
@@ -67,7 +65,6 @@ uint16_t ModRob::udp_read_data(uint8_t *packet, uint8_t packet_size, uint8_t *ud
 }
 
 uint16_t ModRob::udp_module_disc(uint8_t *udp_tx_buffer) {
-    //Send number of devices
     uint8_t index = 0;
     for(int i=0;i<ModRob::devices_size;i++) {
         udp_tx_buffer[index++] = ModRob::devices[i].attributes_size + 2;

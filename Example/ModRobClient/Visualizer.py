@@ -2,10 +2,11 @@ from tkinter import *
 from tkinter import messagebox
 import tkinter as tk
 import numpy as np
-import json
-import copy
+
+#class that makes it easier to draw modules for the demonstration robot
 
 class ModuleGraphics:
+    #Transform the local attributes of the module to match the global frame of reference
     def __init__(self, module_data, port_nb, mating_port_positions, mating_port_orientation, graphic_scaling):
         self.id = module_data["id"]
         self.ports_positions = module_data["ports_positions"]
@@ -21,11 +22,9 @@ class ModuleGraphics:
 
         displacement = new_position - port_position
 
-        #angle = np.arccos(port_orientation.T @ new_orientation)
         angle = np.arctan2(np.linalg.det([port_orientation, new_orientation]), np.dot(port_orientation, new_orientation))
         A = np.array([[np.cos(angle), -np.sin(angle)],[np.sin(angle), np.cos(angle)]])
         for i in range(len(self.ports_positions)):
-            #self.ports_positions[i] = A @ (np.array(self.ports_positions[i]) + displacement - new_position) + new_position
             self.ports_positions[i] = (graphic_scaling*A) @ (np.array(self.ports_positions[i]) - port_position) + port_position + displacement
 
         for i in range(len(self.ports_orientations)):
@@ -34,7 +33,6 @@ class ModuleGraphics:
 
         for i in range(len(self.outlines)):
             for j in range(len(self.outlines[i])):
-                #self.outlines[i][j] = A @ (np.array(self.outlines[i][j]) + displacement  - new_position) + new_position
                 self.outlines[i][j] = (graphic_scaling*A) @ (np.array(self.outlines[i][j]) - port_position) + port_position + displacement
 
     def draw(self, canvas, color):
