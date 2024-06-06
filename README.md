@@ -1,17 +1,18 @@
 # Modular Robot Framework Semester Project Spring 2024
 
 ## File structure
-
+```md
 .
 ├── ModRobClient
 │   └── ModRobClient.py:   Python libary to allow the controller to interact with the robot
 ├── ModRobESP32:           ESP32 Arduino PlatformIO project template, firmware side of the framework
-└── Examples:              application of the framework for a demonstration robot
+│
+└── Examples:              application example of the framework for a demonstration robot
     ├── ModRobClient
-    │   ├── live_demo.py:  diplays a real-time representation of the demonstration robot by using the ModRobClient.py library
+    │   ├── live_demo.py:  diplays a real-time representation of the demonstration robot with the sensor readings by using the ModRobClient.py library
     │   └── Visualizer.py: helps to display the modules on screen for live_demo.py
     └── ModRobESP32:       Firmware side of the framework applied to the demonstration robot, only main.ccp was modified
-
+```
 
 ## Firmware Side
 The firmware side is a PlatformIO ESP32 Arduino framework template project.
